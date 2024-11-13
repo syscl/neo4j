@@ -252,12 +252,9 @@ class TransactionBoundPlanContext(tc: TransactionalContextWrapper, logger: Inter
             }
           }
           val valueCapability: ValueCapability = tps => {
-            reference.getCapability.valueCapability(tps.map(typeToValueCategory): _*) match {
-              // As soon as the kernel provides an array of IndexValueCapability, this mapping can change
-              case IndexValueCapability.YES => tps.map(_ => CanGetValue)
-              case IndexValueCapability.PARTIAL => tps.map(_ => DoNotGetValue)
-              case IndexValueCapability.NO => tps.map(_ => DoNotGetValue)
-            }
+            val categories = tps.map(typeToValueCategory)
+            if (categories.forall(c => reference.getCapability.valueCapability(c) == IndexValueCapability.YES)) tps.map(_ => CanGetValue)
+            else tps.map(_ => DoNotGetValue)
           }
           if (behaviours.contains(EventuallyConsistent)) {
             // Ignore eventually consistent indexes. Those are for explicit querying via procedures.
